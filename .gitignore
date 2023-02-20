@@ -2,7 +2,6 @@
 node_modules/
 out/
 package-lock.json
-package.json
 tsconfig.jsonvsc-extension-quickstart.md
 .eslintrc.json
 .yarnrc

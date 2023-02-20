@@ -4,7 +4,6 @@
 #include <string>
 #include <vector>
 #include <regex>
-#include <direct.h>
 #include <filesystem>
 
 using std::string;
@@ -32,7 +31,7 @@ static void write_includes_to_file(
 /* ========================================================================= */
 static string read_source_file(
 /* ------------------------------------------------------------------------- */
-    const string &path)
+    const fs::path &path)
 {
     constexpr auto read_size = std::size_t(4096);
     std::ifstream stream(path.c_str());
@@ -164,10 +163,10 @@ int main(
         std::cerr << "Missing args!\n";
         return -1;
     }
-    const string source_file_path(argc[1]);
+    const fs::path source_file_path(argc[1]);
     const auto source_content = read_source_file(source_file_path);
     const auto includes       = get_all_includes_from_source(source_content);
-    const fs::path dir_path("C:\\IncludeLess\\src\\tests\\simple");
+    const fs::path dir_path(source_file_path.parent_path());
     fs::current_path(dir_path);
     if (!makefile_exists_in_dir(dir_path))
     {
