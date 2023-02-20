@@ -1,0 +1,14 @@
+.vscode/
+node_modules/
+out/
+package-lock.json
+package.json
+tsconfig.jsonvsc-extension-quickstart.md
+.eslintrc.json
+.yarnrc
+vsc-extension-quickstart.md
+**/tsconfig.json
+**/.eslintrc.json
+**/*.map
+src/backend/main.exe
+src/test/
