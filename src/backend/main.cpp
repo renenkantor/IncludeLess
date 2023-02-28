@@ -12,10 +12,10 @@ namespace fs = std::filesystem;
 /* ========================================================================= */
 static void write_includes_to_file(
 /* ------------------------------------------------------------------------- */
-    const std::vector<string> &includes)
+    const std::vector<string> &includes, const string &file_path)
 {
     std::ofstream includes_file;
-    includes_file.open("all_includes.txt");
+    includes_file.open(file_path);
     if (!includes_file.is_open())
     {
         std::cerr << "Error in open output file\n";
@@ -52,7 +52,7 @@ static std::vector<string> get_all_includes_from_source(
     const string &source)
 {
     std::vector<string> includes;
-    const std::regex include_regex("#include *(\"|<)[^\n]*(\"|>)");
+    const std::regex include_regex("^ *# *include *(\"|<)[^\n\">]+(\"|>) *(//.*)?$", std::regex_constants::multiline);
     std::sregex_iterator regex_it(source.begin(), source.end(), include_regex);
     const std::sregex_iterator end_it;
     while (regex_it != end_it)
@@ -173,7 +173,7 @@ int main(
         std::cerr << "No makefile found!\n";
         return -1;
     }
-    write_includes_to_file(includes);
+    write_includes_to_file(includes, "all_includes.txt");
     const auto copy_path = create_copy_of_dir(dir_path);
     fs::current_path(copy_path);
     const auto useless_includes = get_useless_includes(includes, copy_path);
@@ -184,5 +184,6 @@ int main(
     }
     fs::current_path(dir_path); // so we can delete copy dir and return to old state.
     fs::remove_all(copy_path);
+    write_includes_to_file(useless_includes, "useless_includes.txt");
     return 0;
 }
