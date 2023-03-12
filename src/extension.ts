@@ -2,35 +2,34 @@
 import * as vscode from 'vscode';
 import * as path from 'path';
 import { readFileSync } from 'fs';
-  
+
 var exec = require('child_process').execFile;
+
 // Called once when creating extension
 export function activate(context: vscode.ExtensionContext) {
-
 	console.log('Created IncludeLess extension.');
 	// Called everytime extension is used
-	let disposable = vscode.commands.registerCommand('includeless.includeless', () => {
+	let disposable = vscode.commands.registerCommand('includeless.includeless', async () => {
 		let source_file_path = path.join(__dirname, "../src/tests/simple/main.cpp");
 		let exe_file_path = path.join(__dirname, "../src/backend/main.exe");
-		exec(exe_file_path, [source_file_path], (error: any, stdout: any, stderr: any) => {
-			if (error) {
-				console.log(`${stderr}`);
-				return;
-			}
-			console.log(`${stdout}`);
+		const execPromise = new Promise((resolve, reject) => {
+			exec(exe_file_path, [source_file_path], (error: any, stdout: any, stderr: any) => {
+				if (error) {
+					console.log(`${stderr}`);
+					reject(error);
+					return;
+				}
+				console.log(`${stdout}`);
+				resolve(stdout);
+			});
 		});
+		await execPromise;
 		const collection = vscode.languages.createDiagnosticCollection('test');
 		if (vscode.window.activeTextEditor) {
 			updateDiagnostics(vscode.window.activeTextEditor.document, collection);
 		}
-		/*context.subscriptions.push(vscode.window.onDidChangeActiveTextEditor(editor => {
-			if (editor) {
-				updateDiagnostics(editor.document, collection);
-			}
-		}));*/
 		vscode.window.showInformationMessage('Removed all unused includes!');
 	});
-
 	context.subscriptions.push(disposable);
 }
 
@@ -46,8 +45,8 @@ function getRanges(): Array<vscode.Range> {
 			continue;
 		}
 		let start_pos = new vscode.Position(Number(sub_range[0]), Number(sub_range[1]));
-		let end_pos   = new vscode.Position(Number(sub_range[0]), Number(sub_range[2]));
-		let range     = new vscode.Range(start_pos, end_pos);
+		let end_pos = new vscode.Position(Number(sub_range[0]), Number(sub_range[2]));
+		let range = new vscode.Range(start_pos, end_pos);
 		ranges.push(range);
 	}
 	return ranges;
@@ -56,7 +55,7 @@ function getRanges(): Array<vscode.Range> {
 function updateDiagnostics(document: vscode.TextDocument, collection: vscode.DiagnosticCollection): void {
 	let ranges = getRanges();
 	let warn_ranges = [];
-	for (var i_range of ranges)	{
+	for (var i_range of ranges) {
 		console.log(i_range);
 		let warn = new vscode.Diagnostic(i_range, 'You can remove this Include', vscode.DiagnosticSeverity.Warning);
 		warn_ranges.push(warn);
