@@ -1,6 +1,8 @@
 /* eslint-disable @typescript-eslint/naming-convention */
 import * as vscode from 'vscode';
 import * as path from 'path';
+import { readFileSync } from 'fs';
+  
 var exec = require('child_process').execFile;
 // Called once when creating extension
 export function activate(context: vscode.ExtensionContext) {
@@ -32,14 +34,35 @@ export function activate(context: vscode.ExtensionContext) {
 	context.subscriptions.push(disposable);
 }
 
+function getRanges(): Array<vscode.Range> {
+	const ranges_path = path.join(__dirname, "../src/tests/simple/ranges.txt");
+	const ranges_file = readFileSync(ranges_path, 'utf-8');
+	const lines = ranges_file.split('\n');
+	let ranges = [];
+	for (var line of lines) {
+		const sub_range = line.split(' ');
+		if (sub_range.length !== 3) {
+			console.log("error in ranges file");
+			continue;
+		}
+		let start_pos = new vscode.Position(Number(sub_range[0]), Number(sub_range[1]));
+		let end_pos   = new vscode.Position(Number(sub_range[0]), Number(sub_range[2]));
+		let range     = new vscode.Range(start_pos, end_pos);
+		ranges.push(range);
+	}
+	return ranges;
+}
+
 function updateDiagnostics(document: vscode.TextDocument, collection: vscode.DiagnosticCollection): void {
+	let ranges = getRanges();
+	let warn_ranges = [];
+	for (var i_range of ranges)	{
+		console.log(i_range);
+		let warn = new vscode.Diagnostic(i_range, 'You can remove this Include', vscode.DiagnosticSeverity.Warning);
+		warn_ranges.push(warn);
+	}
 	if (document) {
-		collection.set(document.uri, [{
-			code: '',
-			message: 'You can remove this Include',
-			range: new vscode.Range(new vscode.Position(3, 4), new vscode.Position(3, 10)),
-			severity: vscode.DiagnosticSeverity.Warning,
-		}]);
+		collection.set(document.uri, warn_ranges);
 	} else {
 		collection.clear();
 	}
