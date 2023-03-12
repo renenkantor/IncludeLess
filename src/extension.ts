@@ -8,6 +8,18 @@ var exec = require('child_process').execFile;
 // Called once when creating extension
 export function activate(context: vscode.ExtensionContext) {
 	console.log('Created IncludeLess extension.');
+	const include_collection = vscode.languages.createDiagnosticCollection('include_collection');
+	if (vscode.window.activeTextEditor !== undefined) {
+		vscode.languages.registerCodeActionsProvider(vscode.window.activeTextEditor.document.languageId, {
+			provideCodeActions(document: vscode.TextDocument, range: vscode.Range, context: vscode.CodeActionContext, token: vscode.CancellationToken): vscode.CodeAction[] | undefined {		
+				let fix = new vscode.CodeAction('Remove redundant include directive', vscode.CodeActionKind.QuickFix);
+				fix.edit = new vscode.WorkspaceEdit();
+				const lineRange = new vscode.Range(range.start.line, 0, range.start.line + 1, 0);
+				fix.edit.delete(document.uri, lineRange);
+				return [fix];
+			}
+		});
+	}
 	// Called everytime extension is used
 	let disposable = vscode.commands.registerCommand('includeless.includeless', async () => {
 		let source_file_path : string;
@@ -36,9 +48,8 @@ export function activate(context: vscode.ExtensionContext) {
 			});
 		});
 		await execPromise;
-		const collection = vscode.languages.createDiagnosticCollection('test');
 		if (vscode.window.activeTextEditor) {
-			updateDiagnostics(vscode.window.activeTextEditor.document, collection);
+			updateDiagnostics(vscode.window.activeTextEditor.document, include_collection);
 		}
 		vscode.window.showInformationMessage('Removed all unused includes!');
 	});
@@ -74,15 +85,22 @@ function getRanges(): Array<vscode.Range> {
 	return ranges;
 }
 
+function foo() {
+
+}
+
 function updateDiagnostics(document: vscode.TextDocument, collection: vscode.DiagnosticCollection): void {
+	collection.clear();
 	let ranges = getRanges();
 	let warn_ranges = [];
 	for (var i_range of ranges) {
-		let warn = new vscode.Diagnostic(i_range, 'You can remove this Include', vscode.DiagnosticSeverity.Warning);
-		warn_ranges.push(warn);
+		let diagnostic = new vscode.Diagnostic(i_range, 'Redundant include directive', vscode.DiagnosticSeverity.Warning);
+		diagnostic.relatedInformation = [new vscode.DiagnosticRelatedInformation(new vscode.Location(document.uri, i_range), 'This file is included but its symbols are never used')];
+        warn_ranges.push(diagnostic);
 	}
 	if (document) {
 		collection.set(document.uri, warn_ranges);
+		
 	} else {
 		collection.clear();
 	}
