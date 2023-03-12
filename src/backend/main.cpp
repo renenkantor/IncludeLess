@@ -11,6 +11,50 @@ using std::string;
 namespace fs = std::filesystem;
 
 /* ========================================================================= */
+static std::string get_trim(
+/* ------------------------------------------------------------------------- */
+    const std::string& str)
+{
+    std::string trimmed(str);
+    std::string::iterator end_pos = std::remove(trimmed.begin(), trimmed.end(), ' ');
+    trimmed.erase(end_pos, trimmed.end());
+    return trimmed;
+}
+
+/* ========================================================================= */
+static void mark_all_duplicated_includes_except_one(
+/* ------------------------------------------------------------------------- */
+    std::vector<IncludeEntity> &includes)
+{
+    for (auto &outer_inc : includes)
+    {
+        if (outer_inc.m_is_useless) 
+        {
+            continue;
+        }
+        const auto &trimed_outer = get_trim(outer_inc.m_str);
+        bool first_appear = false;
+        for (auto &inner_inc : includes) 
+        {
+            const auto &trimed_inner = get_trim(inner_inc.m_str);
+            if (trimed_inner != trimed_outer)
+            {
+                continue;
+            }
+            if (first_appear == false) 
+            {
+                first_appear = true;
+            }
+            else
+            {
+                inner_inc.m_is_useless = true;
+            }
+        }
+    }
+}
+
+
+/* ========================================================================= */
 static void write_includes_to_file(
 /* ------------------------------------------------------------------------- */
     const std::vector<IncludeEntity> &includes, 
@@ -129,6 +173,7 @@ static void remove_line_from_file(
     const fs::path    &file_path, 
     const std::string &include_to_remove) 
 {
+    const auto &trimmed_inc = get_trim(include_to_remove);
     std::ifstream in_file(file_path);
     std::ofstream out_file("tmp.txt");
     if (in_file.is_open())
@@ -136,7 +181,8 @@ static void remove_line_from_file(
         std::string line;
         while (std::getline(in_file, line))
         {
-            if (line != include_to_remove) 
+            const auto &trimmed_line = get_trim(line);
+            if (trimmed_line != trimmed_inc) 
             {
                 out_file << line << "\n";
             }
@@ -155,6 +201,7 @@ static bool is_useless_include(
     const IncludeEntity &include,
     const fs::path      &file_path)
 {
+    int a;
     fs::path tmp_path(file_path);
     tmp_path.concat("_tmp.txt");
     fs::remove(tmp_path);
@@ -180,8 +227,13 @@ static void mark_useless_includes(
 {
     dir_path.append("main.cpp");
     std::vector<string> useless_includes;
+    mark_all_duplicated_includes_except_one(includes);
     for (auto &include : includes)
     {
+        if (include.m_is_useless)
+        {
+            continue;
+        }
         if (is_useless_include(include, dir_path)) 
         {
             include.m_is_useless = true;
