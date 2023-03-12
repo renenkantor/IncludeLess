@@ -8,6 +8,7 @@ echo "Finished build"
 pwd_v=$(pwd)
 
 pwd_test="$pwd_v/../tests/"
+echo $pwd_test
 for file in $pwd_test*
 do
   echo "Running $file/main.cpp"

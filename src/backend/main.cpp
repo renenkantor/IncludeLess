@@ -5,6 +5,7 @@
 #include <vector>
 #include <regex>
 #include <filesystem>
+#include "IncludeEntity.h"
 
 using std::string;
 namespace fs = std::filesystem;
@@ -12,20 +13,30 @@ namespace fs = std::filesystem;
 /* ========================================================================= */
 static void write_includes_to_file(
 /* ------------------------------------------------------------------------- */
-    const std::vector<string> &includes, const string &file_path)
+    const std::vector<IncludeEntity> &includes, 
+    const string                     &all_path,
+    const string                     &useless_path)
 {
-    std::ofstream includes_file;
-    includes_file.open(file_path);
-    if (!includes_file.is_open())
+    std::ofstream all_file;
+    std::ofstream useless_file;
+
+    all_file.open(all_path);
+    useless_file.open(all_path);
+    if (!all_file.is_open() || !useless_file.is_open())
     {
         std::cerr << "Error in open output file\n";
         return;
     }
     for (const auto &inc : includes)
     {
-        includes_file << inc << "\n";
+        if (inc.m_is_useless) 
+        {
+            useless_file << inc.m_str << "\n";
+        }
+        all_file << inc.m_str << " start = " << inc.m_match.position() << " end = " << inc.m_match.position() + inc.m_match.length() << "\n";
     }
-    includes_file.close();
+    all_file.close();
+    useless_file.close();
 }
 
 /* ========================================================================= */
@@ -47,18 +58,18 @@ static string read_source_file(
 }
 
 /* ========================================================================= */
-static std::vector<string> get_all_includes_from_source(
+static std::vector<IncludeEntity> get_all_includes_from_source(
 /* ------------------------------------------------------------------------- */
     const string &source)
 {
-    std::vector<string> includes;
-    const std::regex include_regex("^ *# *include *(\"|<)[^\n\">]+(\"|>) *(//.*)?$", std::regex_constants::multiline);
-    std::sregex_iterator regex_it(source.begin(), source.end(), include_regex);
-    const std::sregex_iterator end_it;
-    while (regex_it != end_it)
-    {
-        includes.emplace_back(regex_it->str());
-        regex_it++;
+    string changing_src(source);
+    std::vector<IncludeEntity> includes;
+    const std::regex include_regex(" *# *include *(\"|<)[^\n\">]+(\"|>) *(//.*)?", std::regex_constants::ECMAScript);
+    std::smatch match;
+    while (std::regex_search(changing_src, match, include_regex)) {
+        std::cout << match.str() << "\n";
+        includes.emplace_back(false, match);
+        changing_src = match.suffix().str();
     }
     return includes;
 }
@@ -114,14 +125,14 @@ static void remove_line_from_file(
 /* ========================================================================= */
 static bool is_useless_include(
 /* ------------------------------------------------------------------------- */
-    const string   &include,
-    const fs::path &file_path)
+    const IncludeEntity &include,
+    const fs::path      &file_path)
 {
     fs::path tmp_path(file_path);
     tmp_path.concat("_tmp.txt");
     fs::remove(tmp_path);
     fs::copy(file_path, tmp_path, std::filesystem::copy_options::overwrite_existing);
-    remove_line_from_file(file_path, include);
+    remove_line_from_file(file_path, include.m_str);
     int exe_res = std::system("make -s"); // -s prevents make output to cout
     if (exe_res != 0)
     {
@@ -135,21 +146,20 @@ static bool is_useless_include(
 }
 
 /* ========================================================================= */
-static std::vector<string> get_useless_includes(
+static void mark_useless_includes(
 /* ------------------------------------------------------------------------- */
-    const std::vector<string> &includes,
-    fs::path                   dir_path)
+    std::vector<IncludeEntity> &includes,
+    fs::path                    dir_path)
 {
     dir_path.append("main.cpp");
     std::vector<string> useless_includes;
-    for (const auto &include : includes)
+    for (auto &include : includes)
     {
         if (is_useless_include(include, dir_path)) 
         {
-            useless_includes.push_back(include);
+            include.m_is_useless = true;
         }
     }
-    return useless_includes;
 }
 
 /* ========================================================================= */
@@ -164,8 +174,10 @@ int main(
         return -1;
     }
     const fs::path source_file_path(argc[1]);
+    std::cout << source_file_path;
+    
     const auto source_content = read_source_file(source_file_path);
-    const auto includes       = get_all_includes_from_source(source_content);
+    auto includes = get_all_includes_from_source(source_content);
     const fs::path dir_path(source_file_path.parent_path());
     fs::current_path(dir_path);
     if (!makefile_exists_in_dir(dir_path))
@@ -173,17 +185,19 @@ int main(
         std::cerr << "No makefile found!\n";
         return -1;
     }
-    write_includes_to_file(includes, "all_includes.txt");
     const auto copy_path = create_copy_of_dir(dir_path);
     fs::current_path(copy_path);
-    const auto useless_includes = get_useless_includes(includes, copy_path);
+    mark_useless_includes(includes, copy_path);
     std::cout << "\nYou can remove the following includes:\n";
-    for (const auto &useless_include : useless_includes) 
+    for (const auto &include : includes) 
     {
-        std::cout << useless_include << "\n";
+        if (include.m_is_useless)
+        {
+            std::cout << include.m_str << "\n";
+        }
     }
     fs::current_path(dir_path); // so we can delete copy dir and return to old state.
     fs::remove_all(copy_path);
-    write_includes_to_file(useless_includes, "useless_includes.txt");
+    write_includes_to_file(includes, "all_includes.txt", "useless_includes.txt");
     return 0;
 }
