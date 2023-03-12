@@ -30,14 +30,16 @@ static void write_includes_to_file(
         std::cerr << "Error in open output file\n";
         return;
     }
-    bool firstLine = true;
+    bool first_line = true;
     for (const auto &inc : includes)
     {
         if (inc.m_is_useless) 
         {
-            if(!firstLine)
+            if(!first_line)
+            {
                 useless_range_file << "\n";
-            firstLine = false;
+            }
+            first_line = false;
             useless_file << inc.m_str << "\n";
             useless_range_file << inc.line << " " << inc.m_match.position() << " " << inc.m_match.position() + inc.m_match.length();
         }
@@ -74,32 +76,28 @@ static std::vector<IncludeEntity> get_all_includes_from_source(
     string changing_src(source);
     std::vector<IncludeEntity> includes;
     const std::regex include_regex(" *# *include *(\"|<)[^\n\">]+(\"|>) *(//.*)?", std::regex_constants::ECMAScript);
-    
     std::vector<std::string> lines;
     size_t pos = 0;
-    while (pos < changing_src.size()) {
+    while (pos < changing_src.size()) 
+    {
         size_t newline_pos = changing_src.find('\n', pos);
-        if (newline_pos == std::string::npos) {
+        if (newline_pos == std::string::npos) 
+        {
             newline_pos = changing_src.size();
         }
         lines.push_back(changing_src.substr(pos, newline_pos - pos));
         pos = newline_pos + 1;
     }
 
-    for (size_t i = 0; i < lines.size(); i++) {
-        // std::cout << "Line " << i << " = " << lines[i] << "\n";
+    for (size_t i_line = 0; i_line < lines.size(); i_line++) 
+    {
         std::smatch match;
-        if (std::regex_search(lines[i], match, include_regex)) {
-            std::cout << "match.str() = " << match.str() << "\n";
-            includes.emplace_back(false, match, i);
+        if (std::regex_search(lines[i_line], match, include_regex)) 
+        {
+            includes.emplace_back(false, match, i_line);
             changing_src = match.suffix().str();
         }
     }
-    // while (std::regex_search(changing_src, match, include_regex)) {
-    //     std::cout << match.str() << "\n";
-    //     includes.emplace_back(false, match);
-    //     changing_src = match.suffix().str();
-    // }
     return includes;
 }
 
@@ -203,8 +201,6 @@ int main(
         return -1;
     }
     const fs::path source_file_path(argc[1]);
-    std::cout  << "soure file path = "<< source_file_path << "\n";
-    
     const auto source_content = read_source_file(source_file_path);
     auto includes = get_all_includes_from_source(source_content);
     const fs::path dir_path(source_file_path.parent_path());

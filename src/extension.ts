@@ -40,6 +40,9 @@ function getRanges(): Array<vscode.Range> {
 	let ranges = [];
 	for (var line of lines) {
 		const sub_range = line.split(' ');
+		if (sub_range.length === 0) {
+			continue;
+		}
 		if (sub_range.length !== 3) {
 			console.log("error in ranges file");
 			continue;

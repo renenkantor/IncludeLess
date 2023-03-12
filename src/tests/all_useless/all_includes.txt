@@ -2,6 +2,3 @@
 #include <vector>
 #include <iostream>
 #include "h1.h"
- start = 0 end = 17
-#include <iostream> line = 2 start = 0 end = 19
-#include "h1.h" line = 3 start = 0 end = 15
