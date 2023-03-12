@@ -1,7 +1,11 @@
 #include        <stdio.h>       
      #include <vector>
-#include <iostream> //Test
 #    include "h1.h"
 #include <blah>
  #include <TEST>
 #include <regex>
+ream> //Test line = 2 start = 0 end = 26
+#    include "h1.h" line = 4 start = 0 end = 19
+#include <blah> line = 7 start = 18 end = 33
+ #include <TEST> line = 10 start = 2 end = 18
+#include <regex> line = 11 start = 0 end = 16

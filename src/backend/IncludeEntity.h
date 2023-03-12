@@ -10,7 +10,8 @@ public:
     bool              m_is_useless;
     const std::smatch m_match;
     const std::string m_str;
-    IncludeEntity(bool useless, const std::smatch &i_match) : m_is_useless(useless), m_match(i_match), m_str(i_match.str()) {}
+    const int line;
+    IncludeEntity(bool useless, const std::smatch &i_match, const int line) : m_is_useless(useless), m_match(i_match), m_str(i_match.str()), line(line) {}
 };
 
 #endif
