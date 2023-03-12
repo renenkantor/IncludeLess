@@ -15,28 +15,37 @@ static void write_includes_to_file(
 /* ------------------------------------------------------------------------- */
     const std::vector<IncludeEntity> &includes, 
     const string                     &all_path,
-    const string                     &useless_path)
+    const string                     &useless_path,
+    const string                     &useless_range_path)
 {
     std::ofstream all_file;
     std::ofstream useless_file;
+    std::ofstream useless_range_file;
 
     all_file.open(all_path);
-    useless_file.open(all_path);
-    if (!all_file.is_open() || !useless_file.is_open())
+    useless_file.open(useless_path);
+    useless_range_file.open(useless_range_path);
+    if (!all_file.is_open() || !useless_file.is_open() || !useless_range_file.is_open())
     {
         std::cerr << "Error in open output file\n";
         return;
     }
+    bool firstLine = true;
     for (const auto &inc : includes)
     {
         if (inc.m_is_useless) 
         {
+            if(!firstLine)
+                useless_range_file << "\n";
+            firstLine = false;
             useless_file << inc.m_str << "\n";
+            useless_range_file << inc.line << " " << inc.m_match.position() << " " << inc.m_match.position() + inc.m_match.length();
         }
-        all_file << inc.m_str << " start = " << inc.m_match.position() << " end = " << inc.m_match.position() + inc.m_match.length() << "\n";
+        all_file << inc.m_str << "\n";
     }
     all_file.close();
     useless_file.close();
+    useless_range_file.close();
 }
 
 /* ========================================================================= */
@@ -65,12 +74,32 @@ static std::vector<IncludeEntity> get_all_includes_from_source(
     string changing_src(source);
     std::vector<IncludeEntity> includes;
     const std::regex include_regex(" *# *include *(\"|<)[^\n\">]+(\"|>) *(//.*)?", std::regex_constants::ECMAScript);
-    std::smatch match;
-    while (std::regex_search(changing_src, match, include_regex)) {
-        std::cout << match.str() << "\n";
-        includes.emplace_back(false, match);
-        changing_src = match.suffix().str();
+    
+    std::vector<std::string> lines;
+    size_t pos = 0;
+    while (pos < changing_src.size()) {
+        size_t newline_pos = changing_src.find('\n', pos);
+        if (newline_pos == std::string::npos) {
+            newline_pos = changing_src.size();
+        }
+        lines.push_back(changing_src.substr(pos, newline_pos - pos));
+        pos = newline_pos + 1;
     }
+
+    for (size_t i = 0; i < lines.size(); i++) {
+        // std::cout << "Line " << i << " = " << lines[i] << "\n";
+        std::smatch match;
+        if (std::regex_search(lines[i], match, include_regex)) {
+            std::cout << "match.str() = " << match.str() << "\n";
+            includes.emplace_back(false, match, i);
+            changing_src = match.suffix().str();
+        }
+    }
+    // while (std::regex_search(changing_src, match, include_regex)) {
+    //     std::cout << match.str() << "\n";
+    //     includes.emplace_back(false, match);
+    //     changing_src = match.suffix().str();
+    // }
     return includes;
 }
 
@@ -174,7 +203,7 @@ int main(
         return -1;
     }
     const fs::path source_file_path(argc[1]);
-    std::cout << source_file_path;
+    std::cout  << "soure file path = "<< source_file_path << "\n";
     
     const auto source_content = read_source_file(source_file_path);
     auto includes = get_all_includes_from_source(source_content);
@@ -198,6 +227,6 @@ int main(
     }
     fs::current_path(dir_path); // so we can delete copy dir and return to old state.
     fs::remove_all(copy_path);
-    write_includes_to_file(includes, "all_includes.txt", "useless_includes.txt");
+    write_includes_to_file(includes, "all_includes.txt", "useless_includes.txt", "ranges.txt");
     return 0;
 }
