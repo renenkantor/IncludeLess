@@ -138,8 +138,10 @@ static std::vector<IncludeEntity> get_all_includes_from_source(
         std::smatch match;
         if (std::regex_search(lines[i_line], match, include_regex)) 
         {
-            includes.emplace_back(false, match, i_line);
-            changing_src = match.suffix().str();
+            if (lines[i_line][0] == match.str()[0]) {
+                includes.emplace_back(false, match, i_line);
+                changing_src = match.suffix().str();
+            }
         }
     }
     return includes;
