@@ -138,7 +138,14 @@ static std::vector<IncludeEntity> get_all_includes_from_source(
         std::smatch match;
         if (std::regex_search(lines[i_line], match, include_regex)) 
         {
-            if (lines[i_line][0] == match.str()[0]) {
+            bool match_is_at_start_line = true;
+            for (int i = 0; i < lines[i_line].size(); i++) {
+                if (lines[i_line][i] != match.str()[i]) {
+                    match_is_at_start_line = false;
+                    break;
+                }
+            }
+            if (match_is_at_start_line) {
                 includes.emplace_back(false, match, i_line);
                 changing_src = match.suffix().str();
             }

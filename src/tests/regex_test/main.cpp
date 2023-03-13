@@ -5,7 +5,7 @@
 #    include "h1.h"
 
 int main() {
-    std::cout << "#include <blah>" << "\n";
+    std::cout << " #include <blah>" << "\n";
 }
 
 // #include <TEST>
