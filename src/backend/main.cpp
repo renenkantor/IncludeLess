@@ -201,7 +201,6 @@ static bool is_useless_include(
     const IncludeEntity &include,
     const fs::path      &file_path)
 {
-    int a;
     fs::path tmp_path(file_path);
     tmp_path.concat("_tmp.txt");
     fs::remove(tmp_path);
