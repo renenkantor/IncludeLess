@@ -11,3 +11,5 @@ vsc-extension-quickstart.md
 **/*.map
 src/backend/main.exe
 src/test/
+.DS_Store
+src/tests/two-source/main.exe

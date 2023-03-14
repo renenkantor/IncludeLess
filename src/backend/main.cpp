@@ -7,7 +7,10 @@
 #include <filesystem>
 #include "IncludeEntity.h"
 
+#define EXTENSION_TMP_FOLDER ".tmp_extension"
+
 using std::string;
+using std::cout;
 namespace fs = std::filesystem;
 
 /* ========================================================================= */
@@ -167,12 +170,12 @@ static bool makefile_exists_in_dir(
 /* ========================================================================= */
 static fs::path create_copy_of_dir(
 /* ------------------------------------------------------------------------- */
-    const fs::path &dir_path)
+    const fs::path &dir_path, const fs::path &current_file)
 {
-    fs::path copy_path = dir_path;
+    fs::path copy_path = dir_path / EXTENSION_TMP_FOLDER / current_file;
     copy_path.concat("_copy");
     fs::remove_all(copy_path);
-    fs::copy(dir_path, copy_path, fs::copy_options::recursive);
+    fs::copy(dir_path, copy_path/*, fs::copy_options::recursive*/);
     return copy_path;
 }
 
@@ -261,6 +264,7 @@ int main(
         return -1;
     }
     const fs::path source_file_path(argc[1]);
+    const fs::path current_file = source_file_path.filename();
     const auto source_content = read_source_file(source_file_path);
     auto includes = get_all_includes_from_source(source_content);
     const fs::path dir_path(source_file_path.parent_path());
@@ -270,7 +274,10 @@ int main(
         std::cerr << "No makefile found!\n";
         return -1;
     }
-    const auto copy_path = create_copy_of_dir(dir_path);
+    const fs::path tmp_dir(dir_path / EXTENSION_TMP_FOLDER);
+    fs::remove_all(tmp_dir);
+    fs::create_directory(tmp_dir);
+    const auto copy_path = create_copy_of_dir(dir_path, current_file);
     fs::current_path(copy_path);
     mark_useless_includes(includes, copy_path);
     std::cout << "\nYou can remove the following includes:\n";
@@ -281,7 +288,7 @@ int main(
             std::cout << include.m_str << "\n";
         }
     }
-    fs::current_path(dir_path); // so we can delete copy dir and return to old state.
+    fs::current_path(tmp_dir); // so we can delete copy dir and return to old state.
     fs::remove_all(copy_path);
     write_includes_to_file(includes, "all_includes.txt", "useless_includes.txt", "ranges.txt");
     return 0;
