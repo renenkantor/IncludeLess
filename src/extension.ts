@@ -80,7 +80,7 @@ function getRanges(): Array<vscode.Range> {
 		vscode.window.showInformationMessage('Couldn\'t find ranges');
 		return [];
 	}
-	const ranges_path = path.join(current_working_dir, "/ranges.txt");
+	const ranges_path = path.join(current_working_dir, "/.tmp_extension/ranges.txt");
 	const ranges_file = readFileSync(ranges_path, 'utf-8');
 	const lines = ranges_file.split('\n');
 	let ranges = [];
@@ -102,7 +102,7 @@ function getRanges(): Array<vscode.Range> {
 }
 
 function updateRanges(current_working_dir: string, remove_line: number) {
-	const ranges_path = path.join(current_working_dir, "/ranges.txt");
+	const ranges_path = path.join(current_working_dir, "/.tmp_extension/ranges.txt");
 	const fileContent = readFileSync(ranges_path, 'utf-8');
 
 	const lines = fileContent.split('\n');
