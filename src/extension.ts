@@ -74,13 +74,15 @@ export function activate(context: vscode.ExtensionContext) {
 
 function getRanges(): Array<vscode.Range> {
 	let current_working_dir: string;
+	let current_file: string;
 	if (vscode.window.activeTextEditor !== undefined) {
 		current_working_dir = path.dirname(vscode.window.activeTextEditor.document.fileName);
+		current_file = path.basename(vscode.window.activeTextEditor.document.fileName);
 	} else {
 		vscode.window.showInformationMessage('Couldn\'t find ranges');
 		return [];
 	}
-	const ranges_path = path.join(current_working_dir, "/.tmp_extension/ranges.txt");
+	const ranges_path = path.join(current_working_dir, "/.tmp_extension/", current_file + "_ranges.txt");
 	const ranges_file = readFileSync(ranges_path, 'utf-8');
 	const lines = ranges_file.split('\n');
 	let ranges = [];
@@ -102,7 +104,14 @@ function getRanges(): Array<vscode.Range> {
 }
 
 function updateRanges(current_working_dir: string, remove_line: number) {
-	const ranges_path = path.join(current_working_dir, "/.tmp_extension/ranges.txt");
+	let current_file: string;
+	if (vscode.window.activeTextEditor !== undefined) {
+		current_file = path.basename(vscode.window.activeTextEditor.document.fileName);
+	} else {
+		vscode.window.showInformationMessage('Couldn\'t find ranges');
+		return [];
+	}
+	const ranges_path = path.join(current_working_dir, "/.tmp_extension/", current_file + "_ranges.txt");
 	const fileContent = readFileSync(ranges_path, 'utf-8');
 
 	const lines = fileContent.split('\n');

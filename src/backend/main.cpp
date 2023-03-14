@@ -63,15 +63,16 @@ static void write_includes_to_file(
     const std::vector<IncludeEntity> &includes, 
     const string                     &all_path,
     const string                     &useless_path,
-    const string                     &useless_range_path)
+    const string                     &useless_range_path,
+    const fs::path                   &current_file)
 {
     std::ofstream all_file;
     std::ofstream useless_file;
     std::ofstream useless_range_file;
 
-    all_file.open(all_path);
-    useless_file.open(useless_path);
-    useless_range_file.open(useless_range_path);
+    all_file.open(current_file.string() + "_" + all_path);
+    useless_file.open(current_file.string() + "_" + useless_path);
+    useless_range_file.open(current_file.string() + "_" + useless_range_path);
     if (!all_file.is_open() || !useless_file.is_open() || !useless_range_file.is_open())
     {
         std::cerr << "Error in open output file\n";
@@ -290,6 +291,6 @@ int main(
     }
     fs::current_path(tmp_dir); // so we can delete copy dir and return to old state.
     fs::remove_all(copy_path);
-    write_includes_to_file(includes, "all_includes.txt", "useless_includes.txt", "ranges.txt");
+    write_includes_to_file(includes, "all_includes.txt", "useless_includes.txt", "ranges.txt", current_file);
     return 0;
 }
