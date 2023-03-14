@@ -47,7 +47,7 @@ export function activate(context: vscode.ExtensionContext) {
 		}
 		let exe_file_path = path.join(__dirname, "../src/backend/main.exe");
 		const execPromise = new Promise((resolve, reject) => {
-			exec(exe_file_path, [source_file_path], (error: any, stdout: any, stderr: any) => {
+			exec(exe_file_path, [path.dirname(source_file_path)], (error: any, stdout: any, stderr: any) => {
 				if (error) {
 					console.log(`${stderr}`);
 					reject(error);
@@ -69,6 +69,11 @@ export function activate(context: vscode.ExtensionContext) {
 			updateDiagnostics(vscode.window.activeTextEditor.document, include_collection);
 		}
 	});
+	vscode.window.onDidChangeActiveTextEditor(editor => {
+		if (vscode.window.activeTextEditor) {
+			updateDiagnostics(vscode.window.activeTextEditor.document, include_collection);
+		}
+    });
 	context.subscriptions.push(disposable);
 }
 

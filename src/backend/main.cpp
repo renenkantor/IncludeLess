@@ -159,9 +159,8 @@ static std::vector<IncludeEntity> get_all_includes_from_source(
 }
 
 /* ========================================================================= */
-static bool makefile_exists_in_dir(
+static bool makefile_exists_in_dir()
 /* ------------------------------------------------------------------------- */
-    const fs::path &dir_path)
 {
     return fs::exists("GNUmakefile") ||
            fs::exists("makefile")    ||
@@ -264,13 +263,9 @@ int main(
         std::cerr << "Missing args!\n";
         return -1;
     }
-    const fs::path source_file_path(argc[1]);
-    const fs::path current_file = source_file_path.filename();
-    const auto source_content = read_source_file(source_file_path);
-    auto includes = get_all_includes_from_source(source_content);
-    const fs::path dir_path(source_file_path.parent_path());
+    const fs::path dir_path(argc[1]);
     fs::current_path(dir_path);
-    if (!makefile_exists_in_dir(dir_path))
+    if (!makefile_exists_in_dir())
     {
         std::cerr << "No makefile found!\n";
         return -1;
@@ -278,19 +273,29 @@ int main(
     const fs::path tmp_dir(dir_path / EXTENSION_TMP_FOLDER);
     fs::remove_all(tmp_dir);
     fs::create_directory(tmp_dir);
-    const auto copy_path = create_copy_of_dir(dir_path, current_file);
-    fs::current_path(copy_path);
-    mark_useless_includes(includes, copy_path);
-    std::cout << "\nYou can remove the following includes:\n";
-    for (const auto &include : includes) 
-    {
-        if (include.m_is_useless)
+    for (const auto& dirEntry : fs::recursive_directory_iterator(dir_path)) {
+        const fs::path source_file_path(dirEntry.path());
+        if (source_file_path.extension() != ".cpp" && source_file_path.extension() != ".c" &&
+             source_file_path.extension() != ".cxx" && source_file_path.extension() != ".h")
+            continue;        
+        const fs::path current_file = source_file_path.filename();
+        const auto source_content = read_source_file(source_file_path);        
+        auto includes = get_all_includes_from_source(source_content);
+        const auto copy_path = create_copy_of_dir(dir_path, current_file);
+        fs::current_path(copy_path);
+        mark_useless_includes(includes, copy_path);
+        std::cout << "\nYou can remove the following includes:\n";
+        for (const auto &include : includes) 
         {
-            std::cout << include.m_str << "\n";
+            if (include.m_is_useless)
+            {
+                std::cout << include.m_str << "\n";
+            }
         }
+        fs::current_path(tmp_dir); // so we can delete copy dir and return to old state.
+        fs::remove_all(copy_path);
+        write_includes_to_file(includes, "all_includes.txt", "useless_includes.txt", "ranges.txt", current_file);
+        fs::current_path(dir_path);
     }
-    fs::current_path(tmp_dir); // so we can delete copy dir and return to old state.
-    fs::remove_all(copy_path);
-    write_includes_to_file(includes, "all_includes.txt", "useless_includes.txt", "ranges.txt", current_file);
     return 0;
 }
