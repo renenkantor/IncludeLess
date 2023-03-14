@@ -167,6 +167,19 @@ static bool makefile_exists_in_dir()
            fs::exists("Makefile");
 }
 
+void copy_recursive_without_hidden(const fs::path &src, const fs::path &dst) {
+    for (const auto& dirEntry : fs::directory_iterator(src)) {
+        if(dirEntry.path().filename().string()[0] == '.')
+            continue;
+        
+        if(dirEntry.is_directory()) {
+            fs::create_directory(dst / dirEntry.path().filename());
+            copy_recursive_without_hidden(dirEntry.path(), dst / dirEntry.path().filename());
+        } else
+            fs::copy(dirEntry.path(), dst);
+    }
+}
+
 /* ========================================================================= */
 static fs::path create_copy_of_dir(
 /* ------------------------------------------------------------------------- */
@@ -175,7 +188,8 @@ static fs::path create_copy_of_dir(
     fs::path copy_path = dir_path / EXTENSION_TMP_FOLDER / current_file;
     copy_path.concat("_copy");
     fs::remove_all(copy_path);
-    fs::copy(dir_path, copy_path/*, fs::copy_options::recursive*/);
+    fs::create_directory(copy_path);
+    copy_recursive_without_hidden(dir_path, copy_path);
     return copy_path;
 }
 

@@ -10,6 +10,7 @@ var exec = require('child_process').execFile;
 // Called once when creating extension
 export function activate(context: vscode.ExtensionContext) {
 	console.log('Created IncludeLess extension.');
+	let root_dir: string;
 	const include_collection = vscode.languages.createDiagnosticCollection('include_collection');
 	if (vscode.window.activeTextEditor !== undefined) {
 		vscode.languages.registerCodeActionsProvider(vscode.window.activeTextEditor.document.languageId, {
@@ -48,6 +49,7 @@ export function activate(context: vscode.ExtensionContext) {
 		let exe_file_path = path.join(__dirname, "../src/backend/main.exe");
 		const execPromise = new Promise((resolve, reject) => {
 			exec(exe_file_path, [path.dirname(source_file_path)], (error: any, stdout: any, stderr: any) => {
+				root_dir = path.dirname(source_file_path);
 				if (error) {
 					console.log(`${stderr}`);
 					reject(error);
@@ -59,35 +61,33 @@ export function activate(context: vscode.ExtensionContext) {
 		});
 		await execPromise;
 		if (vscode.window.activeTextEditor) {
-			updateDiagnostics(vscode.window.activeTextEditor.document, include_collection);
+			updateDiagnostics(vscode.window.activeTextEditor.document, include_collection, root_dir);
 		}
 	});
 	// Add a command to execute the CodeAction
 	vscode.commands.registerCommand('myExtension.removeIncludeDirective', (uri: vscode.Uri, range: vscode.Range) => {
-		updateRanges(path.dirname(uri.fsPath),range.start.line);
+		updateRanges(root_dir,range.start.line);
 		if (vscode.window.activeTextEditor) {
-			updateDiagnostics(vscode.window.activeTextEditor.document, include_collection);
+			updateDiagnostics(vscode.window.activeTextEditor.document, include_collection, root_dir);
 		}
 	});
 	vscode.window.onDidChangeActiveTextEditor(editor => {
 		if (vscode.window.activeTextEditor) {
-			updateDiagnostics(vscode.window.activeTextEditor.document, include_collection);
+			updateDiagnostics(vscode.window.activeTextEditor.document, include_collection, root_dir);
 		}
     });
 	context.subscriptions.push(disposable);
 }
 
-function getRanges(): Array<vscode.Range> {
-	let current_working_dir: string;
+function getRanges(root_dir: string): Array<vscode.Range> {
 	let current_file: string;
 	if (vscode.window.activeTextEditor !== undefined) {
-		current_working_dir = path.dirname(vscode.window.activeTextEditor.document.fileName);
 		current_file = path.basename(vscode.window.activeTextEditor.document.fileName);
 	} else {
 		vscode.window.showInformationMessage('Couldn\'t find ranges');
 		return [];
 	}
-	const ranges_path = path.join(current_working_dir, "/.tmp_extension/", current_file + "_ranges.txt");
+	const ranges_path = path.join(root_dir, "/.tmp_extension/", current_file + "_ranges.txt");
 	const ranges_file = readFileSync(ranges_path, 'utf-8');
 	const lines = ranges_file.split('\n');
 	let ranges = [];
@@ -108,7 +108,7 @@ function getRanges(): Array<vscode.Range> {
 	return ranges;
 }
 
-function updateRanges(current_working_dir: string, remove_line: number) {
+function updateRanges(root_dir: string, remove_line: number) {
 	let current_file: string;
 	if (vscode.window.activeTextEditor !== undefined) {
 		current_file = path.basename(vscode.window.activeTextEditor.document.fileName);
@@ -116,7 +116,7 @@ function updateRanges(current_working_dir: string, remove_line: number) {
 		vscode.window.showInformationMessage('Couldn\'t find ranges');
 		return [];
 	}
-	const ranges_path = path.join(current_working_dir, "/.tmp_extension/", current_file + "_ranges.txt");
+	const ranges_path = path.join(root_dir, "/.tmp_extension/", current_file + "_ranges.txt");
 	const fileContent = readFileSync(ranges_path, 'utf-8');
 
 	const lines = fileContent.split('\n');
@@ -137,9 +137,9 @@ function updateRanges(current_working_dir: string, remove_line: number) {
 	writeFileSync(ranges_path, modifiedContent, 'utf-8');
 }
 
-function updateDiagnostics(document: vscode.TextDocument, collection: vscode.DiagnosticCollection): void {
+function updateDiagnostics(document: vscode.TextDocument, collection: vscode.DiagnosticCollection, root_dir: string): void {
 	collection.clear();
-	let ranges = getRanges();
+	let ranges = getRanges(root_dir);
 	let warn_ranges = [];
 	for (var i_range of ranges) {
 		let diagnostic = new vscode.Diagnostic(i_range, 'Redundant include directive', vscode.DiagnosticSeverity.Warning);
