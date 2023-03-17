@@ -280,8 +280,8 @@ int main(
     fs::current_path(dir_path);
     if (!makefile_exists_in_dir())
     {
-        std::cerr << "No makefile found!\n";
-        return -1;
+        std::cerr << "No makefile found!";
+        return -2;
     }
     const fs::path tmp_dir(dir_path / EXTENSION_TMP_FOLDER);
     fs::remove_all(tmp_dir);

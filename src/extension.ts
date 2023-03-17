@@ -36,12 +36,6 @@ export function activate(context: vscode.ExtensionContext) {
 		let source_file_path: string;
 		if (vscode.window.activeTextEditor !== undefined) {
 			source_file_path = vscode.window.activeTextEditor.document.fileName;
-			var fileExt = path.basename(source_file_path).split('.').pop();
-			if (fileExt !== 'c' && fileExt !== 'cpp' && fileExt !== 'h' && fileExt !== 'cxx') {
-				vscode.window.showInformationMessage('Extension can only be used on source files and headers');
-				return;
-			}
-
 		} else {
 			vscode.window.showInformationMessage('Open a source file to use the extension');
 			return;
@@ -51,6 +45,11 @@ export function activate(context: vscode.ExtensionContext) {
 			exec(exe_file_path, [path.dirname(source_file_path)], (error: any, stdout: any, stderr: any) => {
 				root_dir = path.dirname(source_file_path);
 				if (error) {
+				    console.log(stderr);
+					if (stderr === 'No makefile found!') {
+						vscode.window.showInformationMessage('No makefile found in current directory');
+						return;
+					}
 					console.log(`${stderr}`);
 					reject(error);
 					return;
