@@ -176,7 +176,7 @@ void copy_recursive_without_hidden(const fs::path &src, const fs::path &dst) {
             fs::create_directory(dst / dirEntry.path().filename());
             copy_recursive_without_hidden(dirEntry.path(), dst / dirEntry.path().filename());
         } else
-            fs::copy(dirEntry.path(), dst);
+            fs::copy(dirEntry.path(), dst / dirEntry.path().filename());
     }
 }
 
