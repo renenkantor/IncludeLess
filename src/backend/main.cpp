@@ -248,9 +248,8 @@ static bool is_useless_include(
 static void mark_useless_includes(
 /* ------------------------------------------------------------------------- */
     std::vector<IncludeEntity> &includes,
-    fs::path                    dir_path)
+    const fs::path             &file_path)
 {
-    dir_path.append("main.cpp");
     std::vector<string> useless_includes;
     mark_all_duplicated_includes_except_one(includes);
     for (auto &include : includes)
@@ -259,7 +258,7 @@ static void mark_useless_includes(
         {
             continue;
         }
-        if (is_useless_include(include, dir_path)) 
+        if (is_useless_include(include, file_path)) 
         {
             include.m_is_useless = true;
         }
@@ -297,7 +296,7 @@ int main(
         auto includes = get_all_includes_from_source(source_content);
         const auto copy_path = create_copy_of_dir(dir_path, current_file);
         fs::current_path(copy_path);
-        mark_useless_includes(includes, copy_path);
+        mark_useless_includes(includes, copy_path / source_file_path.lexically_relative(dir_path));
         std::cout << "\nYou can remove the following includes:\n";
         for (const auto &include : includes) 
         {
@@ -309,6 +308,7 @@ int main(
         fs::current_path(tmp_dir); // so we can delete copy dir and return to old state.
         fs::remove_all(copy_path);
         write_includes_to_file(includes, "all_includes.txt", "useless_includes.txt", "ranges.txt", current_file);
+        std::cout << "Finished " << source_file_path.filename() << "\n";
         fs::current_path(dir_path);
     }
     return 0;

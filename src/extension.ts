@@ -60,6 +60,7 @@ export function activate(context: vscode.ExtensionContext) {
 			});
 		});
 		await execPromise;
+		vscode.window.showInformationMessage('Finished IncludeLess diagnostic');
 		if (vscode.window.activeTextEditor) {
 			updateDiagnostics(vscode.window.activeTextEditor.document, include_collection, root_dir);
 		}
