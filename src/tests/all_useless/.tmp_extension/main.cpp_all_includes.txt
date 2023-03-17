@@ -1,4 +1,0 @@
-#include <stdio.h>
-#include <vector>
-#include <iostream>
-#include "h1.h"
