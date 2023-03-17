@@ -12,4 +12,14 @@ vsc-extension-quickstart.md
 src/backend/main.exe
 src/test/
 .DS_Store
-src/tests/two-source/main.exe
+src/tests/all_useless/.tmp_extension/
+src/tests/comment_after_include/.tmp_extension/
+src/tests/duplicate/.tmp_extension/
+src/tests/multiple-dir/.tmp_extension/
+src/tests/no_useless/.tmp_extension/
+src/tests/regex_test/.tmp_extension/
+src/tests/simple/.tmp_extension/
+src/tests/two-source/.tmp_extension/
+src/tests/two-source-simple/.tmp_extension/
+src/tests/include_in_include/.tmp_extension/
+src/run_test_output.txt
