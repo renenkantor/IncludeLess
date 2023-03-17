@@ -1,7 +1,0 @@
-        #include "h1.h"                  
-#include <stdio.h>
-#include                    <vector>     
-#include <vector>
-#include <iostream>
-#include "h1.h"
-#include <vector>
