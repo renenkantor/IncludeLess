@@ -40,6 +40,7 @@ export function activate(context: vscode.ExtensionContext) {
 			vscode.window.showInformationMessage('Open a source file to use the extension');
 			return;
 		}
+		vscode.window.showInformationMessage('Include anaylsis is in session. This might take a minute or so');
 		let exe_file_path = path.join(__dirname, "../src/backend/main.exe");
 		const execPromise = new Promise((resolve, reject) => {
 			exec(exe_file_path, [path.dirname(source_file_path)], (error: any, stdout: any, stderr: any) => {
