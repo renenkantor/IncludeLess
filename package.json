@@ -3,6 +3,7 @@
   "displayName": "IncludeLess",
   "description": "Remove unused includes from your source file!",
   "version": "0.0.1",
+  "publisher": "rkrd",
   "engines": {
     "vscode": "^1.75.0"
   },
