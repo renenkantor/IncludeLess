@@ -46,7 +46,6 @@ export function activate(context: vscode.ExtensionContext) {
 			exec(exe_file_path, [path.dirname(source_file_path)], (error: any, stdout: any, stderr: any) => {
 				root_dir = path.dirname(source_file_path);
 				if (error) {
-				    console.log(stderr);
 					if (stderr === 'No makefile found!') {
 						vscode.window.showInformationMessage('No makefile found in current directory');
 						return;
