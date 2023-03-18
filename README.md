@@ -6,8 +6,8 @@ This vscode extension finds redundant include directives in your source files.
 
 ## Prerequisite
 
-1. A functional vscode 
-2. 'make' command works on your system
+1. A functional vscode
+2. 'make' and 'g++' commands works on your system
 
 ## Installation
 
