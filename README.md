@@ -6,10 +6,9 @@ This vscode extension finds redundant include directives in your source files.
 
 ## Installation
 
-1. Download `includeless-0.0.1.vsix`
-2. In the same folder, run: `code --install-extension includeless-0.0.1.vsix`
+1. Download `includeless_win-0.0.1.vsix` or `includeless_mac-0.0.1.vsix` according to your OS
+2. In the same folder, run `code --install-extension includeless-0.0.1.vsix`
 3. Open vscode and start using IncludeLess
-
 
 
 https://user-images.githubusercontent.com/63556300/225927081-b11549c6-65a1-4a4a-9208-f7b48a0fc1a3.mp4
