@@ -18,6 +18,7 @@ This vscode extension finds redundant include directives in your source files.
 1. In vscode, open your project
 2. Open one of the files that are in the same directory as your Makefile
 3. Click Ctrl-Shift-P and write "IncludeLess"
+4. You can use one of the folders found in src/tests as an examples
 
 https://user-images.githubusercontent.com/63556300/225927081-b11549c6-65a1-4a4a-9208-f7b48a0fc1a3.mp4
 
